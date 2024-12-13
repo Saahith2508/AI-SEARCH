@@ -1,0 +1,58 @@
+{
+    "Fard truck 20,000": {
+        "parsed_data": {
+            "make": [
+                "no"
+            ],
+            "model": null,
+            "type": "truck",
+            "price": {
+                "min": null,
+                "max": null
+            },
+            "location": null,
+            "damage": null
+        },
+        "correct_data": {
+            "make": "no"
+        }
+    },
+    "Fard truck": {
+        "parsed_data": {
+            "make": [
+                "Ford"
+            ],
+            "model": null,
+            "type": "truck",
+            "price": {
+                "min": null,
+                "max": null
+            },
+            "location": null,
+            "damage": null
+        },
+        "correct_data": {
+            "make": "Ford"
+        }
+    },
+    "Water damaged cars": {
+        "parsed_data": {
+            "make": [
+                "german"
+            ],
+            "model": null,
+            "type": null,
+            "price": {
+                "min": null,
+                "max": null
+            },
+            "location": null,
+            "damage": "water damaged",
+            "buyer_spent": null,
+            "most_bought_car": null
+        },
+        "correct_data": {
+            "make": "german"
+        }
+    }
+}

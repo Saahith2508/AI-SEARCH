@@ -1,0 +1,84 @@
+{
+    "buyers": [
+        {
+            "buyer_id": "12345",
+            "name": "John Doe",
+            "location": {
+                "city": "Los Angeles",
+                "zip_code": "90001",
+                "latitude": 34.0522,
+                "longitude": -118.2437
+            },
+            "cars_bought": [
+                {"make": "BMW", "model": "X5", "year": 2021, "price": 50000},
+                {"make": "Audi", "model": "Q7", "year": 2020, "price": 55000}
+            ],
+            "total_spent": 105000,
+            "most_bought_car": {"make": "BMW", "model": "X5", "count": 1}
+        },
+        {
+            "buyer_id": "67890",
+            "name": "Jane Smith",
+            "location": {
+                "city": "New York",
+                "zip_code": "10001",
+                "latitude": 40.7128,
+                "longitude": -74.0060
+            },
+            "cars_bought": [
+                {"make": "Tesla", "model": "Model 3", "year": 2022, "price": 45000},
+                {"make": "Ford", "model": "Mustang", "year": 2021, "price": 35000}
+            ],
+            "total_spent": 80000,
+            "most_bought_car": {"make": "Tesla", "model": "Model 3", "count": 1}
+        },
+        {
+            "buyer_id": "13579",
+            "name": "Carlos Gomez",
+            "location": {
+                "city": "Miami",
+                "zip_code": "33101",
+                "latitude": 25.7617,
+                "longitude": -80.1918
+            },
+            "cars_bought": [
+                {"make": "Chevrolet", "model": "Silverado", "year": 2021, "price": 60000},
+                {"make": "Honda", "model": "Civic", "year": 2020, "price": 22000}
+            ],
+            "total_spent": 82000,
+            "most_bought_car": {"make": "Chevrolet", "model": "Silverado", "count": 1}
+        },
+        {
+            "buyer_id": "24680",
+            "name": "Emily Davis",
+            "location": {
+                "city": "Chicago",
+                "zip_code": "60601",
+                "latitude": 41.8781,
+                "longitude": -87.6298
+            },
+            "cars_bought": [
+                {"make": "Toyota", "model": "Corolla", "year": 2021, "price": 25000},
+                {"make": "BMW", "model": "328i", "year": 2020, "price": 35000}
+            ],
+            "total_spent": 60000,
+            "most_bought_car": {"make": "BMW", "model": "328i", "count": 1}
+        },
+        {
+            "buyer_id": "11223",
+            "name": "Michael Lee",
+            "location": {
+                "city": "San Francisco",
+                "zip_code": "94105",
+                "latitude": 37.7749,
+                "longitude": -122.4194
+            },
+            "cars_bought": [
+                {"make": "Mercedes-Benz", "model": "GLE 350", "year": 2021, "price": 65000},
+                {"make": "Porsche", "model": "Macan", "year": 2020, "price": 55000}
+            ],
+            "total_spent": 120000,
+            "most_bought_car": {"make": "Mercedes-Benz", "model": "GLE 350", "count": 1}
+        }
+    ]
+}

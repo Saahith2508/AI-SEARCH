@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NER Model Training and Query Search</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+        }
+        h1, h2 {
+            color: #333;
+            text-align: center;
+        }
+        .form-container {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            max-width: 600px;
+            margin: 30px auto;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .form-container label {
+            font-size: 14px;
+            margin-bottom: 8px;
+            display: block;
+            color: #555;
+        }
+        .form-container input,
+        .form-container select {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0 20px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+        }
+        .form-container button {
+            background-color: #007BFF;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .form-container button:hover {
+            background-color: #0056b3;
+        }
+        #results {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+        .loading {
+            text-align: center;
+            color: #007BFF;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>NER Model Training and Query Search</h1>
+
+<!-- Model Training Section -->
+<h2>Train Custom NER Model</h2>
+<div class="form-container">
+    <form id="trainForm" enctype="multipart/form-data">
+        <label for="file">Upload Training Data (JSON)</label>
+        <input type="file" name="file" id="file" required>
+
+        <label for="model">Choose Model Type:</label>
+        <select name="model" id="model">
+            <option value="spacy">spaCy</option>
+            <option value="bert">BERT</option>
+        </select>
+
+        <button type="submit">Train Model</button>
+    </form>
+</div>
+
+<!-- Query Search Section -->
+<h2>Search for Cars</h2>
+<div class="form-container">
+    <form id="queryForm">
+        <label for="query">Enter Query:</label>
+        <input type="text" name="query" id="query" required>
+
+        <label for="buyer_id">Enter Buyer ID:</label>
+        <input type="text" name="buyer_id" id="buyer_id" required>
+
+        <button type="submit">Generate Query</button>
+    </form>
+</div>
+
+<!-- Results Section -->
+<div id="results">
+    <div id="loading" class="loading" style="display: none;">Loading...</div>
+    <div id="queryResults"></div>
+</div>
+
+<script>
+    // AJAX for Training Model
+    document.getElementById('trainForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        fetch('http://127.0.0.1:5000/train', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert('Model trained successfully!');
+        })
+        .catch(error => {
+            alert('Error training the model.');
+        });
+    });
+
+    // AJAX for Query Generation
+    document.getElementById('queryForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const query = document.getElementById('query').value;
+        const buyerId = document.getElementById('buyer_id').value;
+
+        document.getElementById('loading').style.display = 'block'; // Show loading indicator
+
+        fetch('http://127.0.0.1:5000/generate-query', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ query, buyer_id: buyerId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('loading').style.display = 'none'; // Hide loading indicator
+            const resultsDiv = document.getElementById('queryResults');
+            resultsDiv.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            document.getElementById('results').style.display = 'block'; // Show results
+        })
+        .catch(error => {
+            document.getElementById('loading').style.display = 'none'; // Hide loading indicator
+            alert('Error generating query.');
+        });
+    });
+</script>
+
+</body>
+</html>
