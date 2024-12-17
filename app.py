@@ -1,4 +1,6 @@
 import os
+
+import requests
 import spacy
 import json
 import random
@@ -34,7 +36,8 @@ nlp = spacy.load("en_core_web_sm")
 bert_model = pipeline("ner", model="dbmdz/bert-large-cased-finetuned-conll03-english")
 
 # Solr client setup
-SOLR_URL = "https://c-solr.copart.com/solr/#/c_lots_us"
+SOLR_URL = "https://c-solr9-dev.copart.com/solr/c_dev4_onsale_lots_c/select"
+
 solr = pysolr.Solr(SOLR_URL, timeout=10)
 
 # Directory for saving uploaded training data
@@ -181,7 +184,7 @@ def extract_price(price_text: str) -> int:
     price_match = re.search(r"\d+", price_text)
     return int(price_match.group(0)) if price_match else None
 
-CAR_COLORS = ["black", "white", "red", "blue", "silver", "gray", "green", "yellow", "orange", "brown", "purple"]
+CAR_COLORS = ["BLACK", "white", "RED", "blue", "silver", "gray", "green", "yellow", "orange", "brown", "purple"]
 YEAR_CATEGORIES = {
     "under": lambda x: f"lot_year:[* TO {x - 1}]",
     "before": lambda x: f"lot_year:[* TO {x - 1}]",
@@ -221,7 +224,7 @@ def parse_query(query: str, buyer_data: Dict[str, Any]) -> Dict[str, Any]:
 
     # Parsing for car colors
     for color in CAR_COLORS:
-        if color in corrected_query.lower():
+        if color in corrected_query.upper():
             structured_data["color"] = color
 
     # Parsing for lot year (under, before, after, since)
@@ -259,41 +262,80 @@ def parse_query(query: str, buyer_data: Dict[str, Any]) -> Dict[str, Any]:
 
     return structured_data
 
+
+
+
 # Update Solr query generation to include color and lot year
-def generate_solr_query(parsed_data: Dict[str, Any]) -> str:
-    query = []
+def generate_solr_query_json(parsed_data: Dict[str, Any]) -> dict:
+    # Initialize base query parameters
+    query_params = {
+        "query": "*:*",  # Default query to search all documents
+        "filter": [],  # Filter queries will be added here
+        "params": {
+            "q.op": "OR",  # Query operator
+            "defType": "edismax",  # Dismax query parser
+            "qf": "",  # Boost fields
+            "bq": ""  # Boost queries to be added here
+        }
+    }
 
+    filters = []
+    query_boosts = []
+
+    # Process location data and apply boosting based on location
     location_boost = 1.0
-    if parsed_data["location"]:
-        for location in LOCATION_DATA:
-            if parsed_data["location"] == location["location"]:
-                location_boost = location["total_spent"] / 100000.0
+    if parsed_data.get("location"):
+        # Boost location only if it's provided
+        filters.append(f"location_city:{parsed_data['location']}")
 
-    if parsed_data["make"]:
-        query.append(f"lot_make_desc:({' OR '.join(parsed_data['make'])})")
+    # Process 'make' data for boosting
+    if parsed_data.get("make"):
+        makes = parsed_data["make"]
+        # If a specific car make is queried, boost it
+        filters.append(f"lot_make_desc:({' OR '.join(makes)})")
+        query_boosts.append(f"lot_make_desc:({' OR '.join(makes)})")
+        # Ensure that 'make' is the highest priority
+        query_params["params"]["qf"] += " lot_make_desc^3"  # Boost make in qf
 
-    if parsed_data["model"]:
-        query.append(f"lot_model_group:{parsed_data['model']}")
+    # Process 'model' data for filtering
+    if parsed_data.get("model"):
+        filters.append(f"lot_model_group:{parsed_data['model']}")
 
-    if parsed_data["price"]["max"]:
-        query.append(f"price:[* TO {parsed_data['price']['max']}]")
 
-    if parsed_data["location"]:
-        query.append(f"yard_name:{parsed_data['location']}^2")
+    # Process price range filtering
+    if parsed_data.get("price", {}).get("max"):
+        filters.append(f"repair_cost:[* TO {parsed_data['price']['max']}]")
 
-    if parsed_data["damage"]:
-        query.append(f"damage:{parsed_data['damage']}")
+    # Process damage filtering
+    if parsed_data.get("damage"):
+        filters.append(f"damage_type_code:{parsed_data['damage']}")
 
-    if parsed_data["color"]:
-        query.append(f"lot_color:{parsed_data['color']}")
+    # Process color filtering
+    if parsed_data.get("color"):
+        filters.append(f"lot_color:{parsed_data['color']}")
 
-    if parsed_data["lot_year"]:
-        query.append(f"lot_year:{parsed_data['lot_year']}")
+    # Process lot year filtering
+    if parsed_data.get("lot_year"):
+        filters.append(f"lot_year:{parsed_data['lot_year']}")
 
-    if parsed_data["most_bought_car"]:
-        query.append(f"lot_model_group:{parsed_data['most_bought_car']}^2")
+    # Boost query for most bought car only if provided
+    if parsed_data.get("most_bought_car"):
+        query_boosts.append(f"lot_make_desc:{parsed_data['most_bought_car']['make']}^3")
 
-    return " AND ".join(query) + f"^ {location_boost}"
+    # Adjust query boosts for the situation when no specific make is mentioned
+    if not parsed_data.get("make"):
+        # If no make is specified, but location is there, boost location more
+        if parsed_data.get("location"):
+            query_boosts.append(f"location_city:{parsed_data['location']}^2")  # Boost location
+            query_params["params"]["qf"] += " location_city^2"  # Include location in the qf query
+
+    # Update the query parameters with the filters and boost queries
+    query_params["filter"] = filters
+    if query_boosts:
+        query_params["params"]["bq"] = " AND ".join(query_boosts)
+
+    # Return the query structure without the "json" wrapping
+    return query_params
 
 
 # Route for home page
@@ -355,13 +397,27 @@ def generate_query():
 
         # Parse the query and buyer data
         structured_query = parse_query(query, {"buyers": [selected_buyer]})
-        solr_query = generate_solr_query(structured_query)
+        solr_query = generate_solr_query_json(structured_query)
 
         print(solr_query)
-        # Query Solr with the generated query
-        solr_results = solr.search(solr_query)
 
-        return jsonify({"solr_query": solr_query, "results": solr_results.docs})
+        params = {
+            'q': '*:*',
+            'indent': 'true',
+            'json': json.dumps(solr_query)
+        }
+        # Query Solr with the generated query
+        response = requests.get(SOLR_URL, params=params)
+
+        if response.status_code != 200:
+            return jsonify({"error": f"Error querying Solr: {response.text}"}), 500
+
+        solr_results = response.json()
+
+        return jsonify({"solr_query": solr_query, "results": solr_results.get('response', {}).get('docs', [])})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
