@@ -52,7 +52,7 @@
             background-color: #0056b3;
         }
         #results {
-            max-width: 600px;
+            max-width: fit-content;
             margin: 20px auto;
             padding: 20px;
             background-color: #fff;
@@ -69,7 +69,7 @@
 </head>
 <body>
 
-<h1>NER Model Training and Query Search</h1>
+<h1>PerSOL</h1>
 
 <!-- Model Training Section -->
 <h2>Train Custom NER Model</h2>
@@ -105,6 +105,10 @@
 <!-- Results Section -->
 <div id="results">
     <div id="loading" class="loading" style="display: none;">Loading...</div>
+    <H3>Solr Query Sent:</H3>
+    <div id="querySolr"></div>
+
+    <H3>Response:</H3>
     <div id="queryResults"></div>
 </div>
 
@@ -147,7 +151,9 @@
         .then(data => {
             document.getElementById('loading').style.display = 'none'; // Hide loading indicator
             const resultsDiv = document.getElementById('queryResults');
-            resultsDiv.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+             const querySolr = document.getElementById('querySolr');
+             querySolr.innerHTML = `<pre>${JSON.stringify(data.solr_query, null, 2)}</pre>`;
+             resultsDiv.innerHTML = `<pre>${JSON.stringify(data.results, null, 2)}</pre>`;
             document.getElementById('results').style.display = 'block'; // Show results
         })
         .catch(error => {

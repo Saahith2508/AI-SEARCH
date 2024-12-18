@@ -52,9 +52,9 @@ spell = SpellChecker()
 
 # Define dictionaries for specific categories
 CAR_BRANDS_BY_REGION = {
-    "german": ["BMW", "Mercedes", "Audi", "Volkswagen", "Porsche"],
-    "american": ["Ford", "Chevrolet", "Tesla", "Dodge"],
-    "japanese": ["Toyota", "Honda", "Nissan", "Mazda", "Subaru"],
+    "german": ["BMW", "MERCEDES", "AUDI", "VOLKSWAGEN", "PORSCHE"],
+    "american": ["FORD", "CHEVROLET", "TESLA", "DODGE"],
+    "japanese": ["TOYOTA", "HONDA", "NISSAN", "MAZDA", "SUBARU"],
 }
 
 PRICE_CATEGORIES = {
@@ -265,7 +265,6 @@ def parse_query(query: str, buyer_data: Dict[str, Any]) -> Dict[str, Any]:
 
 
 
-# Update Solr query generation to include color and lot year
 def generate_solr_query_json(parsed_data: Dict[str, Any]) -> dict:
     # Initialize base query parameters
     query_params = {
@@ -283,9 +282,7 @@ def generate_solr_query_json(parsed_data: Dict[str, Any]) -> dict:
     query_boosts = []
 
     # Process location data and apply boosting based on location
-    location_boost = 1.0
     if parsed_data.get("location"):
-        # Boost location only if it's provided
         filters.append(f"location_city:{parsed_data['location']}")
 
     # Process 'make' data for boosting
@@ -300,7 +297,6 @@ def generate_solr_query_json(parsed_data: Dict[str, Any]) -> dict:
     # Process 'model' data for filtering
     if parsed_data.get("model"):
         filters.append(f"lot_model_group:{parsed_data['model']}")
-
 
     # Process price range filtering
     if parsed_data.get("price", {}).get("max"):
@@ -336,6 +332,7 @@ def generate_solr_query_json(parsed_data: Dict[str, Any]) -> dict:
 
     # Return the query structure without the "json" wrapping
     return query_params
+
 
 
 # Route for home page
@@ -414,7 +411,13 @@ def generate_query():
 
         solr_results = response.json()
 
-        return jsonify({"solr_query": solr_query, "results": solr_results.get('response', {}).get('docs', [])})
+        response = {
+            "solr_query": solr_query,  # Add solr_query first
+            "results": solr_results.get('response', {}).get('docs', [])  # Add results second
+        }
+        return jsonify(response)
+
+        #return jsonify({"solr_query": solr_query, "results": solr_results.get('response', {}).get('docs', [])})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500

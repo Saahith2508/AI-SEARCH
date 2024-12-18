@@ -154,10 +154,8 @@ def train_bert_ner(training_data, output_dir):
 # train_bert_ner(training_data, "./bert_car_model")
 
 # Test spaCy NER model
-nlp_spacy = spacy.load("./spacy_car_model")
-test_text = "The 2020 Audi Q4 with 60,000 miles is available at the Copart-Houston auction."
-doc = nlp_spacy(test_text)
-print(f"Entities in the text: {[(ent.text, ent.label_) for ent in doc.ents]}")
+
+
 
 # # Test BERT NER model
 # model = BertForTokenClassification.from_pretrained("./bert_car_model")
@@ -165,3 +163,11 @@ print(f"Entities in the text: {[(ent.text, ent.label_) for ent in doc.ents]}")
 # nlp_bert = pipeline("ner", model=model, tokenizer=tokenizer)
 # entities = nlp_bert(test_text)
 # print(f"Entities in the text: {entities}")
+
+
+
+
+nlp_spacy = spacy.load("./spacy_car_model")
+test_text = "The black 2020 Audi Q4 with 60,000 miles and 8 cylinders is available at the Copart-Houston auction."
+doc = nlp_spacy(test_text)
+print(f"Entities in the text: {[(ent.text, ent.label_) for ent in doc.ents]}")

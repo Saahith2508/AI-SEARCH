@@ -14,7 +14,7 @@
                 {"make": "Audi", "model": "Q7", "year": 2020, "price": 55000}
             ],
             "total_spent": 105000,
-            "most_bought_car": {"make": "Audi", "model": "X5", "count": 1}
+            "most_bought_car": {"make": "BMW", "model": "X5", "count": 1}
         },
         {
             "buyer_id": "67890",
